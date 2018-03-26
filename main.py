@@ -5,24 +5,54 @@ import psycopg2
 from requests import get
 from requests.auth import HTTPDigestAuth
 
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import Updater, Dispatcher, CommandHandler, RegexHandler, MessageHandler
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Updater, Dispatcher, CommandHandler, RegexHandler, MessageHandler, CallbackQueryHandler
 
 from time import sleep, time    
 
 def settings(bot, updater):
     bot.send_message(
-            chat_id=updater.message.chat_id,
-            text=text,
+        chat_id=updater.message.chat_id,
+        text='Ента значит настроечки',
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text='Change URL Miner', callback_data='1'),InlineKeyboardButton(text='Change URL Dwarfpool', callback_data='2')]
+                ]
+            )
+        )
+
+def callback(bot, updater):
+    print('Yeash')
+    if updater.callback_query.data == '1':
+        cur.execute('UPDATE main SET status=1 WHERE id=%s;', [updater.callback_query.message.chat_id])
+        db.commit()
+        print('Woow')
+        bot.send_message(
+            chat_id=updater.callback_query.message.chat_id,
+            text='Отправь мне ссылочку на минёра :)',
             reply_markup=ReplyKeyboardMarkup(
                 keyboard=[
-                    ['Change URL miner','Change URL Dwarfpool'],
                     ['Back']
                     ],
                 resize_keyboard=True,
                 one_time_keyboard=False,
                 selective=True)
             )
+    elif updater.callback_query.data == '2':
+        cur.execute('UPDATE main SET status=2 WHERE id=%s;', [updater.callback_query.message.chat_id])
+        db.commit()
+        bot.send_message(
+            chat_id=updater.callback_query.message.chat_id,
+            text='Отправь мне ссылочку на пул :)',
+            reply_markup=ReplyKeyboardMarkup(
+                keyboard=[
+                    ['Back']
+                    ],
+                resize_keyboard=True,
+                one_time_keyboard=False,
+                selective=True)
+            )
+
 
 def free(bot, updater):
     cur.execute('SELECT status FROM main WHERE id=%s;',[updater.message.chat_id])
@@ -32,11 +62,17 @@ def free(bot, updater):
     elif status == 1: # Send URL miner
         cur.execute('UPDATE main SET url_mine=%s, status=0 WHERE id=%s;', [updater.message.text, updater.message.chat_id])
         db.commit()
+        send_buttons(bot, updater)
+        settings(bot, updater)
     elif status == 2: # Send URL dwarfpool
         cur.execute('UPDATE main SET url_dw=%s, status=0 WHERE id=%s;', [updater.message.text, updater.message.chat_id])
         db.commit()
+        send_buttons(bot, updater)
+        settings(bot, updater)
 
-def send_buttons(bot, updater, text):
+def send_buttons(bot, updater, text='Главное меню:'):
+    cur.execute('UPDATE main SET status=0 WHERE id=%s;', [updater.message.chat_id])
+    db.commit()
     bot.send_message(
             chat_id=updater.message.chat_id,
             text=text,
@@ -75,7 +111,9 @@ if __name__ == '__main__':
     bot = updater.bot
     handlers = [
         CommandHandler('start', start),
+        CallbackQueryHandler(callback),
         RegexHandler('Settings', settings),
+        RegexHandler('Back', send_buttons),
         MessageHandler(telegram.ext.filters.Filters.text, free),
         ]
     for i in handlers: dispatcher.add_handler(i)
