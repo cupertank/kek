@@ -92,7 +92,7 @@ def start(bot, updater):
         db.commit()
     finally:
         send_buttons(bot, updater, 'Hello, {0}!\n\nЕсли вы запускаете бота впервые, то настройте его'.format(updater.message.from_user['first_name']))
-        
+        settings(bot, updater)
 
 if __name__ == '__main__':
     if os.environ.get('TOKEN') != None:
