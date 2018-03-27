@@ -22,11 +22,10 @@ def settings(bot, updater):
         )
 
 def callback(bot, updater):
-    print('Yeash')
     if updater.callback_query.data == '1':
         cur.execute('UPDATE main SET status=1 WHERE id=%s;', [updater.callback_query.message.chat_id])
         db.commit()
-        print('Woow')
+        print('Ссылочку на минёра отправляют :')
         bot.send_message(
             chat_id=updater.callback_query.message.chat_id,
             text='Отправь мне ссылочку на минёра :)',
@@ -39,6 +38,7 @@ def callback(bot, updater):
                 selective=True)
             )
     elif updater.callback_query.data == '2':
+        print('Ссылочку на пул отправляют :')
         cur.execute('UPDATE main SET status=2 WHERE id=%s;', [updater.callback_query.message.chat_id])
         db.commit()
         bot.send_message(
