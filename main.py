@@ -1,14 +1,10 @@
-import telegram
 import os
+
 import psycopg2
+import telegram
+from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import Updater, CommandHandler, RegexHandler, MessageHandler, CallbackQueryHandler
 
-from requests import get
-from requests.auth import HTTPDigestAuth
-
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Updater, Dispatcher, CommandHandler, RegexHandler, MessageHandler, CallbackQueryHandler
-
-from time import sleep, time    
 
 def settings(bot, updater):
     bot.send_message(
@@ -16,12 +12,16 @@ def settings(bot, updater):
         text='Ента значит настроечки',
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text='Change URL Miner', callback_data='1'),InlineKeyboardButton(text='Change URL Dwarfpool', callback_data='2')]
-                ]
-            )
+                [InlineKeyboardButton(text='Change URL Miner', callback_data='1'),
+                 InlineKeyboardButton(text='Change URL Dwarfpool', callback_data='2')]
+            ]
         )
+    )
+
 
 def callback(bot, updater):
+    bot.deleteMessage(chat_id=updater.callback_query.message.chat_id,
+                      message_id=updater.callback_query.message.message_id)
     if updater.callback_query.data == '1':
         cur.execute('UPDATE main SET status=1 WHERE id=%s;', [updater.callback_query.message.chat_id])
         db.commit()
@@ -32,11 +32,11 @@ def callback(bot, updater):
             reply_markup=ReplyKeyboardMarkup(
                 keyboard=[
                     ['Back']
-                    ],
+                ],
                 resize_keyboard=True,
                 one_time_keyboard=False,
                 selective=True)
-            )
+        )
     elif updater.callback_query.data == '2':
         print('Ссылочку на пул отправляют :')
         cur.execute('UPDATE main SET status=2 WHERE id=%s;', [updater.callback_query.message.chat_id])
@@ -47,52 +47,57 @@ def callback(bot, updater):
             reply_markup=ReplyKeyboardMarkup(
                 keyboard=[
                     ['Back']
-                    ],
+                ],
                 resize_keyboard=True,
                 one_time_keyboard=False,
                 selective=True)
-            )
+        )
 
 
 def free(bot, updater):
-    cur.execute('SELECT status FROM main WHERE id=%s;',[updater.message.chat_id])
+    cur.execute('SELECT status FROM main WHERE id=%s;', [updater.message.chat_id])
     status = cur.fetchone()[0]
-    if status == 0: # IDLE 
+    if status == 0:  # IDLE
         send_buttons(bot, updater)
-    elif status == 1: # Send URL miner
-        cur.execute('UPDATE main SET url_mine=%s, status=0 WHERE id=%s;', [updater.message.text, updater.message.chat_id])
+    elif status == 1:  # Send URL miner
+        cur.execute('UPDATE main SET url_mine=%s, status=0 WHERE id=%s;',
+                    [updater.message.text, updater.message.chat_id])
         db.commit()
         send_buttons(bot, updater)
         settings(bot, updater)
-    elif status == 2: # Send URL dwarfpool
+    elif status == 2:  # Send URL dwarfpool
         cur.execute('UPDATE main SET url_dw=%s, status=0 WHERE id=%s;', [updater.message.text, updater.message.chat_id])
         db.commit()
         send_buttons(bot, updater)
         settings(bot, updater)
 
+
 def send_buttons(bot, updater, text='Главное меню:'):
     cur.execute('UPDATE main SET status=0 WHERE id=%s;', [updater.message.chat_id])
     db.commit()
     bot.send_message(
-            chat_id=updater.message.chat_id,
-            text=text,
-            reply_markup=ReplyKeyboardMarkup(
-                keyboard=[
-                    ['Status','Balance'],
-                    ['Settings']
-                    ],
-                resize_keyboard=True,
-                one_time_keyboard=False,
-                selective=True)
-            )
+        chat_id=updater.message.chat_id,
+        text=text,
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[
+                ['Status', 'Balance'],
+                ['Settings', 'WTF']
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=False,
+            selective=True)
+    )
+
 
 def start(bot, updater):
     try:
         cur.execute('INSERT INTO main(id) VALUES (%s);', [updater.message.chat_id])
         db.commit()
     finally:
-        send_buttons(bot, updater, 'Hello, {0}!\n\nЕсли вы запускаете бота впервые, то настройте его'.format(updater.message.from_user['first_name']))
+        send_buttons(bot, updater, 'Hello, {0}!\n\nЕсли вы запускаете бота впервые, то настройте его'.format(
+            updater.message.from_user['first_name']))
         settings(bot, updater)
+
 
 if __name__ == '__main__':
     if os.environ.get('TOKEN') != None:
@@ -115,7 +120,6 @@ if __name__ == '__main__':
         RegexHandler('Settings', settings),
         RegexHandler('Back', send_buttons),
         MessageHandler(telegram.ext.filters.Filters.text, free),
-        ]
+    ]
     for i in handlers: dispatcher.add_handler(i)
     updater.start_polling()
-    updater.idle()
