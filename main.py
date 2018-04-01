@@ -2,10 +2,43 @@ import os
 
 import psycopg2
 import requests
-import telegram
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, CommandHandler, RegexHandler, MessageHandler, CallbackQueryHandler
 from telegram.ext.filters import Filters
+
+
+def get_json(url):
+    return requests.get(url).json()
+
+def status(bot, updater):
+    cur.execute('SELECT miners FROM main WHERE id=%s;', [updater.message.chat_id])
+    miners = cur.fetchone()[0]
+    for i in miners:
+        json = get_json(i[2])
+        text = '''Worker: {0}
+
+Hashrate:
+60s - {1}
+2m - {2}
+15m - {3}
+
+Highest: {4}
+
+Difficult: {5}
+Average time: {6}
+Shares: {7}/{8}
+Pool: {9}
+Ping: {10}ms'''.format(json['worker_id'],
+                   *json['hashrate']['total'],
+                   json['hashrate']['highest'],
+                   json['results']['diff_current'],
+                   json['results']['avg_time'],
+                   json['results']['shares_good'],
+                   json['results']['shares_total'],
+                   json['connection']['pool'],
+                   json['connection']['ping'])
+        bot.send_message(chat_id=updater.message.chat_id,
+                         text=text)
 
 def settings(bot, updater):
     cur.execute('SELECT miners[1:][2] FROM main WHERE id=%s;', [updater.message.chat_id])
@@ -14,9 +47,9 @@ def settings(bot, updater):
         bot.send_message(chat_id=updater.message.chat_id,
                          text='Кажеца у вас туть пуста',
                          reply_markup=InlineKeyboardMarkup(
-                         inline_keyboard=[
-                             [InlineKeyboardButton(text='Add new miner', callback_data='add')]
-                         ]
+                             inline_keyboard=[
+                                 [InlineKeyboardButton(text='Add new miner', callback_data='add')]
+                             ]
                          ))
     else:
         text = 'Такс, што тут у нас есть: \n\n'
@@ -51,7 +84,7 @@ def callback(bot, updater):
                              one_time_keyboard=False,
                              selective=True)
                          )
-    elif updater.callback_query.data == '10': # Добавление майнера XMRIG
+    elif updater.callback_query.data == '10':  #Добавление майнера XMRIG
         cur.execute('UPDATE main SET status=1 WHERE id=%s', [updater.callback_query.message.chat_id])
         bot.send_message(
             chat_id=updater.callback_query.message.chat_id,
@@ -65,10 +98,11 @@ def callback(bot, updater):
                 selective=True)
         )
 
+
 def free(bot, updater):
     cur.execute('SELECT status FROM main WHERE id=%s;', [updater.message.chat_id])
     status = cur.fetchone()[0]
-    if status == 0:  # IDLE
+    if status == 0:  #IDLE
         send_buttons(bot, updater)
     elif status == 1:  #ADD XMRIG
         try:
@@ -86,7 +120,7 @@ def free(bot, updater):
     elif status == 999:
         cur.execute('SELECT miners FROM main WHERE id=%s', [updater.message.chat_id])
         miners = cur.fetchone()[0]
-        data = list(map(int,str(updater.message.text).split()))
+        data = list(map(int, str(updater.message.text).split()))
         data.sort(reverse=True)
         for num in data:
             try:
@@ -143,6 +177,7 @@ if __name__ == '__main__':
         CallbackQueryHandler(callback),
         RegexHandler('Settings', settings),
         RegexHandler('Back', send_buttons),
+        RegexHandler('Status', status),
         MessageHandler(Filters.text, free),
     ]
     for i in handlers:
