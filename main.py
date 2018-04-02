@@ -177,6 +177,7 @@ if __name__ == '__main__':
     except:
         print('Чего-то не хвататет, чекай переменные')
         exit()
+    print(TOKEN, DB, USER, PASS, HOST, PORT)
     updater = Updater(token=TOKEN)
     db = psycopg2.connect(database=DB,
                           user=USER,
