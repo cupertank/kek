@@ -10,6 +10,7 @@ from telegram.ext.filters import Filters
 def get_json(url):
     return requests.get(url).json()
 
+
 def status(bot, updater):
     cur.execute('SELECT miners FROM main WHERE id=%s;', [updater.message.chat_id])
     miners = cur.fetchone()[0]
@@ -29,16 +30,17 @@ Average time: {6}
 Shares: {7}/{8}
 Pool: {9}
 Ping: {10}ms'''.format(json['worker_id'],
-                   *json['hashrate']['total'],
-                   json['hashrate']['highest'],
-                   json['results']['diff_current'],
-                   json['results']['avg_time'],
-                   json['results']['shares_good'],
-                   json['results']['shares_total'],
-                   json['connection']['pool'],
-                   json['connection']['ping'])
+                       *json['hashrate']['total'],
+                       json['hashrate']['highest'],
+                       json['results']['diff_current'],
+                       json['results']['avg_time'],
+                       json['results']['shares_good'],
+                       json['results']['shares_total'],
+                       json['connection']['pool'],
+                       json['connection']['ping'])
         bot.send_message(chat_id=updater.message.chat_id,
                          text=text)
+
 
 def settings(bot, updater):
     cur.execute('SELECT miners[1:][2] FROM main WHERE id=%s;', [updater.message.chat_id])
@@ -64,6 +66,7 @@ def settings(bot, updater):
                              ]
                          ))
 
+
 def callback(bot, updater):
     if updater.callback_query.data == 'add':
         updater.callback_query.edit_message_text(text='Выбирай кого добавим сегодня',
@@ -84,7 +87,7 @@ def callback(bot, updater):
                              one_time_keyboard=False,
                              selective=True)
                          )
-    elif updater.callback_query.data == '10':  #Добавление майнера XMRIG
+    elif updater.callback_query.data == '10':  # Добавление майнера XMRIG
         cur.execute('UPDATE main SET status=1 WHERE id=%s', [updater.callback_query.message.chat_id])
         bot.send_message(
             chat_id=updater.callback_query.message.chat_id,
@@ -102,9 +105,9 @@ def callback(bot, updater):
 def free(bot, updater):
     cur.execute('SELECT status FROM main WHERE id=%s;', [updater.message.chat_id])
     status = cur.fetchone()[0]
-    if status == 0:  #IDLE
+    if status == 0:  # IDLE
         send_buttons(bot, updater)
-    elif status == 1:  #ADD XMRIG
+    elif status == 1:  # ADD XMRIG
         try:
             req = requests.get(updater.message.text).json()
             cur.execute('SELECT miners FROM main WHERE id=%s', [updater.message.chat_id])
@@ -124,7 +127,7 @@ def free(bot, updater):
         data.sort(reverse=True)
         for num in data:
             try:
-                miners.pop(num-1)
+                miners.pop(num - 1)
             except:
                 bot.send_message(chat_id=updater.message.chat_id,
                                  text='Ну ты где-то косякнул, мда')
@@ -132,6 +135,7 @@ def free(bot, updater):
         cur.execute('UPDATE main SET miners=%s WHERE id=%s', [miners, updater.message.chat_id])
         send_buttons(bot, updater, text='Удолили')
         settings(bot, updater)
+
 
 def send_buttons(bot, updater, text='Главное меню:'):
     cur.execute('UPDATE main SET status=0 WHERE id=%s;', [updater.message.chat_id])
@@ -148,6 +152,7 @@ def send_buttons(bot, updater, text='Главное меню:'):
             selective=True)
     )
 
+
 def start(bot, updater):
     try:
         cur.execute('INSERT INTO main(id) VALUES (%s);', [updater.message.chat_id])
@@ -156,8 +161,9 @@ def start(bot, updater):
             updater.message.from_user['first_name']))
         settings(bot, updater)
 
+
 if __name__ == '__main__':
-    if os.environ.get('TOKEN') != None:
+    if os.environ.get('TOKEN') is not None:
         TOKEN = os.environ.get('TOKEN')
     else:
         print('NO TOKEN!!!')
