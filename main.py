@@ -14,9 +14,13 @@ def get_json(url):
 def status(bot, updater):
     cur.execute('SELECT miners FROM main WHERE id=%s;', [updater.message.chat_id])
     miners = cur.fetchone()[0]
-    for i in miners:
-        json = get_json(i[2])
-        text = '''Worker: {0}
+    if len(miners) == 0:
+        bot.send_message(chat_id=updater.message.chat_id,
+                         text='У тебя нет майнров, поди добавь в настройках')
+    else:
+        for i in miners:
+            json = get_json(i[2])
+            text = '''Worker: {0}
 
 Hashrate:
 60s - {1}
@@ -38,8 +42,8 @@ Ping: {10}ms'''.format(json['worker_id'],
                        json['results']['shares_total'],
                        json['connection']['pool'],
                        json['connection']['ping'])
-        bot.send_message(chat_id=updater.message.chat_id,
-                         text=text)
+            bot.send_message(chat_id=updater.message.chat_id,
+                             text=text)
 
 
 def settings(bot, updater):
