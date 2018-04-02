@@ -173,17 +173,17 @@ if __name__ == '__main__':
         USER = os.environ.get('USER')
         PASS = os.environ.get('PASS')
         HOST = os.environ.get('HOST')
-        PORT = os.environ.get('PORT')
+        PORTDB = os.environ.get('PORTDB')
     except:
         print('Чего-то не хвататет, чекай переменные')
         exit()
-    print(TOKEN, DB, USER, PASS, HOST, PORT)
+    print(TOKEN, DB, USER, PASS, HOST, PORTDB)
     updater = Updater(token=TOKEN)
     db = psycopg2.connect(database=DB,
                           user=USER,
                           password=PASS,
                           host=HOST,
-                          port=PORT)
+                          port=PORTDB)
     db.autocommit = True
     cur = db.cursor()
     dispatcher = updater.dispatcher
