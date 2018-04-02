@@ -167,17 +167,22 @@ def start(bot, updater):
 
 
 if __name__ == '__main__':
-    if os.environ.get('TOKEN') is not None:
-        TOKEN = os.environ.get('TOKEN')
-    else:
-        print('NO TOKEN!!!')
+    try:
+        TOKEN = os.environ['TOKEN']
+        DB = os.environ['DB']
+        USER = os.environ['USER']
+        PASS = os.environ['PASS']
+        HOST = os.environ['HOST']
+        PORT = os.environ['PORT']
+    except:
+        print('Чего-то не хвататет, чекай переменные')
         exit()
     updater = Updater(token=TOKEN)
-    db = psycopg2.connect(database='d3s8e4vposarfr',
-                          user='jcehqdoniwgelx',
-                          password='3fa0a65e027f5ec0c42c5c03ae7a63958313745bc47cf3ec2b9c613a3a8b0229',
-                          host='ec2-54-228-181-43.eu-west-1.compute.amazonaws.com',
-                          port='5432')
+    db = psycopg2.connect(database=DB,
+                          user=USER,
+                          password=PASS,
+                          host=HOST,
+                          port=PORT)
     db.autocommit = True
     cur = db.cursor()
     dispatcher = updater.dispatcher
