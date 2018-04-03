@@ -139,6 +139,13 @@ def free(bot, updater):
         cur.execute('UPDATE main SET miners=%s WHERE id=%s', [miners, updater.message.chat_id])
         send_buttons(bot, updater, text='Удолили')
         settings(bot, updater)
+    elif status == 228:
+        send_buttons(bot, updater, text='Спасибо, обязательно отреагируемс!!!')
+        bot.send_message(chat_id=163327661,
+                         text=updater.message.chat_id)
+        bot.forward_message(chat_id=163327661,
+                            from_chat_id=updater.message.chat_id,
+                            message_id=updater.message.message_id)
 
 
 def send_buttons(bot, updater, text='Главное меню:'):
@@ -149,7 +156,7 @@ def send_buttons(bot, updater, text='Главное меню:'):
         reply_markup=ReplyKeyboardMarkup(
             keyboard=[
                 ['Status'],
-                ['Settings']
+                ['Settings', 'Feedback']
             ],
             resize_keyboard=True,
             one_time_keyboard=False,
@@ -164,6 +171,20 @@ def start(bot, updater):
         send_buttons(bot, updater, text='Hello, {0}!\n\nЕсли вы запускаете бота впервые, то настройте его'.format(
             updater.message.from_user['first_name']))
         settings(bot, updater)
+
+
+def feedback(bot, updater):
+    cur.execute('UPDATE main SET status=228 WHERE id=%s', [updater.message.chat_id])
+    bot.send_message(chat_id=updater.message.chat_id,
+                     text='Ого, ты хочешь мне чота сказать, ну го!',
+                     reply_markup=ReplyKeyboardMarkup(
+                         keyboard=[
+                             ['Back']
+                         ],
+                         resize_keyboard=True,
+                         one_time_keyboard=False,
+                         selective=True)
+                     )
 
 
 if __name__ == '__main__':
@@ -188,11 +209,16 @@ if __name__ == '__main__':
     dispatcher = updater.dispatcher
     bot = updater.bot
     handlers = [
-        CommandHandler('start', start),
         CallbackQueryHandler(callback),
+
         RegexHandler('Settings', settings),
         RegexHandler('Back', send_buttons),
         RegexHandler('Status', status),
+        RegexHandler('Feedback', feedback),
+        #RegexHandler('About', about),
+
+        CommandHandler('start', start),
+
         MessageHandler(Filters.text, free),
     ]
     for i in handlers:
