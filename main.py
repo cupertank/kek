@@ -168,12 +168,12 @@ def start(bot, updater):
 
 if __name__ == '__main__':
     try:
-        TOKEN = os.environ.get('TOKEN')
-        DB = os.environ.get('DB')
-        USER = os.environ.get('USER')
-        PASS = os.environ.get('PASS')
-        HOST = os.environ.get('HOST')
-        PORTDB = os.environ.get('PORTDB')
+        TOKEN = os.environ['TOKEN']
+        DB = os.environ['DB']
+        USER = os.environ['USER']
+        PASS = os.environ['PASS']
+        HOST = os.environ['HOST']
+        PORTDB = os.environ['PORTDB']
     except:
         print('Чего-то не хвататет, чекай переменные')
         exit()
