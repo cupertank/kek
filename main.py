@@ -1,9 +1,8 @@
 import os
-
 import psycopg2
 import requests
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Updater, CommandHandler, RegexHandler, MessageHandler, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, RegexHandler, MessageHandler, CallbackQueryHandler, run_async
 from telegram.ext.filters import Filters
 
 
@@ -11,6 +10,7 @@ def get_json(url):
     return requests.get(url).json()
 
 
+@run_async
 def status(bot, updater):
     cur.execute('SELECT miners FROM main WHERE id=%s;', [updater.message.chat_id])
     miners = cur.fetchone()[0]
@@ -46,6 +46,7 @@ Ping: {10}ms'''.format(json['worker_id'],
                              text=text)
 
 
+@run_async
 def settings(bot, updater):
     cur.execute('SELECT miners[1:][2] FROM main WHERE id=%s;', [updater.message.chat_id])
     miners = cur.fetchone()[0]
@@ -71,6 +72,7 @@ def settings(bot, updater):
                          ))
 
 
+@run_async
 def callback(bot, updater):
     if updater.callback_query.data == 'add':
         updater.callback_query.edit_message_text(text='Выбирай кого добавим сегодня',
@@ -106,6 +108,7 @@ def callback(bot, updater):
         )
 
 
+@run_async
 def free(bot, updater):
     cur.execute('SELECT status FROM main WHERE id=%s;', [updater.message.chat_id])
     status = cur.fetchone()[0]
@@ -148,6 +151,7 @@ def free(bot, updater):
                             message_id=updater.message.message_id)
 
 
+@run_async
 def send_buttons(bot, updater, text='Главное меню:'):
     cur.execute('UPDATE main SET status=0 WHERE id=%s;', [updater.message.chat_id])
     bot.send_message(
@@ -164,6 +168,7 @@ def send_buttons(bot, updater, text='Главное меню:'):
     )
 
 
+@run_async
 def start(bot, updater):
     try:
         cur.execute('INSERT INTO main(id) VALUES (%s);', [updater.message.chat_id])
@@ -173,6 +178,7 @@ def start(bot, updater):
         settings(bot, updater)
 
 
+@run_async
 def feedback(bot, updater):
     cur.execute('UPDATE main SET status=228 WHERE id=%s', [updater.message.chat_id])
     bot.send_message(chat_id=updater.message.chat_id,
