@@ -8,7 +8,7 @@ from telegram.ext.filters import Filters
 
 def get_json(url):
     try:
-        return requests.get(url).json()
+        return requests.get(url, timeout=5).json()
     except:
         return None
 
