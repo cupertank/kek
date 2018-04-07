@@ -7,7 +7,10 @@ from telegram.ext.filters import Filters
 
 
 def get_json(url):
-    return requests.get(url).json()
+    try:
+        return requests.get(url).json()
+    except:
+        return None
 
 
 def status(bot, updater):
@@ -42,7 +45,7 @@ def status(bot, updater):
                        json['results']['shares_good'],
                        json['results']['shares_total'],
                        json['connection']['pool'],
-                       json['connection']['ping'])
+                       json['connection']['ping']) if json != None else '*{0} is down!!!*'.format(i[0])
             bot.send_message(chat_id=updater.message.chat_id,
                              text=text,
                              parse_mode='Markdown')
