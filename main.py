@@ -24,9 +24,9 @@ def status(bot, updater):
             text = '''*Worker:* _{0}_
 
 📈 *Hashrate:*
-⭐ _60s - {1}_
-⭐ _2m - {2}_
-⭐ _15m - {3}_
+⭐ _60s - {1} H/s_
+⭐ _2m - {2} H/s_
+⭐ _15m - {3} H/s_
 
 🔥 *Highest:* _{4}_
 
